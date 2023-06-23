@@ -57,6 +57,51 @@ app.use(express.json());
 
 
 
+app.post('/register', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new User({ email, password: hashedPassword });
+    await user.save();
+    res.status(201).json({ message: 'User registered successfully' });
+  } catch (err) {
+    console.error('Error registering user:', err);
+    res.status(500).json({ message: 'Failed to register user' });
+  }
+});
+
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      res.status(401).json({ message: 'Authentication failed' });
+      return;
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      res.status(401).json({ message: 'Authentication failed' });
+      return;
+    }
+
+     
+     const token = jwt.sign({ userId: user._id }, 'ykey1'); 
+     req.session.token = token;
+ 
+
+    res.status(200).json({ message: 'Authentication successful', token: token, userId: user._id });
+  } catch (err) {
+    console.error('Error during authentication:', err);
+    res.status(500).json({ message: 'Authentication failed' });
+  }
+});
+
+
+
+
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
