@@ -114,6 +114,31 @@ app.post('/tasks', async (req, res) => {
 });
 
 
+app.put('/tasks/:taskId', async (req, res) => {
+  const { taskId } = req.params;
+  const { description } = req.body;
+
+  try {
+
+    const task = await Task.findById(taskId);
+
+    if (!task) {
+      return res.status(404).json({ message: 'Task not found' });
+    }
+
+   
+    task.description = description;
+    const updatedTask = await task.save();
+
+    res.json(updatedTask);
+  } catch (error) {
+    console.error('Error updating task:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+
+
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
